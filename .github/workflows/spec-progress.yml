@@ -1,4 +1,4 @@
-name: Coverage
+name: Spec Progress - Generate Report
 
 on:
   push:
@@ -19,35 +19,24 @@ jobs:
         with:
           components: llvm-tools-preview
 
-      - name: Install cargo-llvm-cov
-        uses: taiki-e/install-action@cargo-llvm-cov
-
       - name: Install cargo-nextest
         uses: taiki-e/install-action@nextest
 
       # 1. Run tests with nextest to generate JUnit XML
       - name: Run Tests with nextest
-        run: cargo nextest run --no-fail-fast --all-features --workspace
+        run: cargo nextest run --no-fail-fast --all-features --workspace 2>&1 | tee test_output.txt
         continue-on-error: true
-
-      # 2. Generate Coverage HTML Report
-      # --ignore-run-fail allows coverage generation even when tests fail (useful for stub tests)
-      - name: Generate Coverage HTML
-        run: cargo nextest run --all-features --workspace --no-fail-fast --ignore-run-fail --html
 
       # 3. Generate Custom "Are We Mod Yet?" Page
       - name: Generate Progress Page
+        env:
+          TEST_OUTPUT_FILE: test_output.txt
         run: bash .github/scripts/generate-progress-page.sh
 
       # 4. Copy logo to deployment directory
       - name: Copy Assets
         run: |
           cp img/hydmg10p.png ./gh-pages-deploy/logo.png
-
-      # 5. Move Coverage Report to subdirectory
-      - name: Organize Reports
-        run: |
-          mv ./target/llvm-cov/html ./gh-pages-deploy/coverage
 
       # 6. Deploy to GitHub Pages (Master Only)
       - name: Deploy to GitHub Pages

@@ -23,6 +23,12 @@ fi
 
 TEST_LIST=$(echo "$RAW_TEST_LIST" | grep -E '^[[:space:]]*[a-zA-Z_][a-zA-Z0-9_-]*::' || true)
 
+# Read test output from file if provided
+if [ -n "$TEST_OUTPUT_FILE" ] && [ -f "$TEST_OUTPUT_FILE" ]; then
+    echo "Reading test output from $TEST_OUTPUT_FILE..."
+    TEST_OUTPUT=$(cat "$TEST_OUTPUT_FILE")
+fi
+
 # Count total tests  
 if [ -z "$TEST_LIST" ]; then
     echo "Error: No tests found in output!"
@@ -370,8 +376,7 @@ cat > "$OUTPUT_FILE" << 'HTMLEOF'
         </div>
         
         <footer>
-            Automatically generated from test results • 
-            <a href="coverage/">View Code Coverage</a>
+            Automatically generated from test results
         </footer>
     </div>
     

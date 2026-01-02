@@ -7,6 +7,9 @@ edition = "2021"
 name = "hymod"
 path = "src/main.rs"
 
+[build-dependencies]
+# Build script to auto-discover all test files
+
 [dependencies]
 clap = { version = "4.5", features = ["derive"] }
 features-new = { path = "../features/new" }

@@ -72,3 +72,6 @@ target/doc/
 .*.kate-swp
 .*.swp
 .*.swo
+
+# debugging builds
+gh-pages-deploy/

@@ -35,19 +35,15 @@ jobs:
       - name: Generate Coverage HTML
         run: cargo llvm-cov --all-features --workspace --ignore-run-fail --html
 
-      # 3. Install Node.js for xunit-viewer
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
+      # 3. Generate Custom "Are We Mod Yet?" Page
+      - name: Generate Progress Page
+        run: bash .github/scripts/generate-progress-page.sh
 
-      # 4. Generate Test Dashboard at root
-      - name: Generate Test Dashboard
+      # 4. Copy logo to deployment directory
+      - name: Copy Assets
         run: |
-          npm install -g xunit-viewer
-          mkdir -p ./gh-pages-deploy
-          xunit-viewer --results target/nextest/default/junit.xml --output ./gh-pages-deploy/index.html
-          
+          cp img/hydmg10p.png ./gh-pages-deploy/logo.png
+
       # 5. Move Coverage Report to subdirectory
       - name: Organize Reports
         run: |

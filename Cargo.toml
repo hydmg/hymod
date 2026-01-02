@@ -1,0 +1,15 @@
+[workspace]
+resolver = "2"
+members = [
+  "cli",
+  "core/config",
+  "core/plan",
+  "core/ops",
+  "core/path",
+  "features/new",
+  "features/build",
+  "features/link",
+  "features/dev",
+  "features/deploy",
+  "features/server"
+]

@@ -11,15 +11,24 @@ mkdir -p "$OUTPUT_DIR"
 
 # Run nextest and capture test list (filter out warnings and non-test lines)
 echo "Collecting test information..."
-TEST_LIST=$(cargo nextest list --all-features --workspace 2>&1 | grep -E '^[[:space:]]*[a-zA-Z_][a-zA-Z0-9_-]*::' || true)
+RAW_TEST_LIST=$(cargo nextest list --all-features --workspace 2>&1)
+EXIT_CODE=$?
 
-# Run tests to check which ones pass
-echo "Running tests..."
-TEST_OUTPUT=$(cargo nextest run --all-features --workspace --no-fail-fast 2>&1 || true)
+if [ $EXIT_CODE -ne 0 ]; then
+    echo "Error: 'cargo nextest list' failed with exit code $EXIT_CODE"
+    echo "Command output:"
+    echo "$RAW_TEST_LIST"
+    exit $EXIT_CODE
+fi
+
+TEST_LIST=$(echo "$RAW_TEST_LIST" | grep -E '^[[:space:]]*[a-zA-Z_][a-zA-Z0-9_-]*::' || true)
 
 # Count total tests  
 if [ -z "$TEST_LIST" ]; then
-    TOTAL_TESTS=0
+    echo "Error: No tests found in output!"
+    echo "Raw 'cargo nextest list' output:"
+    echo "$RAW_TEST_LIST"
+    exit 1
 else
     TOTAL_TESTS=$(echo "$TEST_LIST" | grep -c '::' || echo "0")
     TOTAL_TESTS=$(echo "$TOTAL_TESTS" | tr -d '\n' | tr -d ' ')

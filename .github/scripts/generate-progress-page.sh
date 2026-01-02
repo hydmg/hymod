@@ -11,33 +11,43 @@ mkdir -p "$OUTPUT_DIR"
 
 # Run nextest and capture test list (filter out warnings and non-test lines)
 echo "Collecting test information..."
-RAW_TEST_LIST=$(cargo nextest list --all-features --workspace 2>&1)
+# Capture only STDOUT, dropping stderr (compiler warnings)
+RAW_TEST_LIST=$(cargo nextest list --all-features --workspace --color never 2>/dev/null)
 EXIT_CODE=$?
 
 if [ $EXIT_CODE -ne 0 ]; then
-    echo "Error: 'cargo nextest list' failed with exit code $EXIT_CODE"
-    echo "Command output:"
-    echo "$RAW_TEST_LIST"
+    echo "❌ Error: 'cargo nextest list' failed with exit code $EXIT_CODE"
+    # Re-run to show error since we silenced it above
+    cargo nextest list --all-features --workspace --color never
     exit $EXIT_CODE
 fi
 
 TEST_LIST=$(echo "$RAW_TEST_LIST" | grep -E '^[[:space:]]*[a-zA-Z_][a-zA-Z0-9_-]*::' || true)
+TEST_COUNT=$(echo "$TEST_LIST" | grep -c "::" || echo "0")
+echo "ℹ️  Discovered $TEST_COUNT tests from cargo nextest list."
 
 # Read test output from file if provided
-if [ -n "$TEST_OUTPUT_FILE" ] && [ -f "$TEST_OUTPUT_FILE" ]; then
-    echo "Reading test output from $TEST_OUTPUT_FILE..."
-    TEST_OUTPUT=$(cat "$TEST_OUTPUT_FILE")
+if [ -n "$TEST_OUTPUT_FILE" ]; then
+    if [ -f "$TEST_OUTPUT_FILE" ]; then
+        echo "ℹ️  Reading test output from $TEST_OUTPUT_FILE..."
+        TEST_OUTPUT=$(cat "$TEST_OUTPUT_FILE")
+        OUTPUT_LINES=$(echo "$TEST_OUTPUT" | wc -l)
+        echo "ℹ️  Loaded $OUTPUT_LINES lines of test output."
+    else
+        echo "⚠️  Warning: Test output file '$TEST_OUTPUT_FILE' provided but not found!"
+    fi
 fi
 
 # Count total tests  
 if [ -z "$TEST_LIST" ]; then
-    echo "Error: No tests found in output!"
-    echo "Raw 'cargo nextest list' output:"
-    echo "$RAW_TEST_LIST"
+    echo "❌ Error: No tests found in output!"
+    echo "Debug: Raw list output snippet (first 5 lines):"
+    echo "$RAW_TEST_LIST" | head -n 5
     exit 1
 else
     TOTAL_TESTS=$(echo "$TEST_LIST" | grep -c '::' || echo "0")
     TOTAL_TESTS=$(echo "$TOTAL_TESTS" | tr -d '\n' | tr -d ' ')
+    echo "ℹ️  Parsed $TOTAL_TESTS valid test entries."
 fi
 
 # Count passing tests

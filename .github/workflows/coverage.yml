@@ -27,7 +27,7 @@ jobs:
 
       # 1. Run tests with nextest to generate JUnit XML
       - name: Run Tests with nextest
-        run: cargo nextest run --all-features --workspace --message-format junit > junit.xml
+        run: cargo nextest run --all-features --workspace
         continue-on-error: true
 
       # 2. Generate Coverage HTML Report
@@ -45,7 +45,7 @@ jobs:
       - name: Generate Test Dashboard
         run: |
           npm install -g xunit-viewer
-          xunit-viewer --results junit.xml --output ./target/llvm-cov/html/tests.html
+          xunit-viewer --results target/nextest/default/junit.xml --output ./target/llvm-cov/html/tests.html
 
       # 5. Deploy to GitHub Pages (Master Only)
       - name: Deploy to GitHub Pages

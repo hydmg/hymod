@@ -1,8 +1,6 @@
 # Hymod
 
-## License
-
-**hymod** is strictly open source software licensed under the **GPLv3**.
+[Development Progress](https://hydmg.github.io/hymod/coverage/)
 
 ## License
 

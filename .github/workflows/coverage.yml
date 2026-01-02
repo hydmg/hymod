@@ -22,13 +22,32 @@ jobs:
       - name: Install cargo-llvm-cov
         uses: taiki-e/install-action@cargo-llvm-cov
 
-      # 1. Generate HTML Report
-      # --ignore-filename-regex "tests" excludes the test files themselves from the % calculation
+      - name: Install cargo-nextest
+        uses: taiki-e/install-action@nextest
+
+      # 1. Run tests with nextest to generate JUnit XML
+      - name: Run Tests with nextest
+        run: cargo nextest run --all-features --workspace --message-format junit > junit.xml
+        continue-on-error: true
+
+      # 2. Generate Coverage HTML Report
       # --ignore-run-fail allows coverage generation even when tests fail (useful for stub tests)
       - name: Generate Coverage HTML
         run: cargo llvm-cov --all-features --workspace --ignore-run-fail --html
 
-      # 2. Deploy to GitHub Pages (Master Only)
+      # 3. Install Node.js for xunit-viewer
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # 4. Generate Test Dashboard
+      - name: Generate Test Dashboard
+        run: |
+          npm install -g xunit-viewer
+          xunit-viewer --results junit.xml --output ./target/llvm-cov/html/tests.html
+
+      # 5. Deploy to GitHub Pages (Master Only)
       - name: Deploy to GitHub Pages
         if: github.ref == 'refs/heads/master'
         uses: peaceiris/actions-gh-pages@v3

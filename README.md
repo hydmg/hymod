@@ -2,7 +2,9 @@
 
 📊 [**Development Progress**](https://hydmg.github.io/hymod/coverage/)
 
-Click the above link to view the development progress of hymod.
+Click the above link to view:
+- **Code Coverage Report** - Line-by-line coverage for all crates
+- **Test Dashboard** - All tests with pass/fail status ([tests.html](https://hydmg.github.io/hymod/coverage/tests.html))
 
 ## License
 

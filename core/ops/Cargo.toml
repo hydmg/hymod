@@ -4,3 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+anyhow = "1.0"
+hymod-core-plan = { path = "../plan", package = "core-plan" }
+
+[dev-dependencies]
+tempfile = "3.8"

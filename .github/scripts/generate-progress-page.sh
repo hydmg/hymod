@@ -51,7 +51,7 @@ else
 fi
 
 # Count passing tests
-PASSED_TESTS=$(echo "$TEST_OUTPUT" | grep -c 'PASS \[' || echo "0")
+PASSED_TESTS=$(echo "$TEST_OUTPUT" | grep -c 'PASS.* \[' || echo "0")
 PASSED_TESTS=$(echo "$PASSED_TESTS" | tr -d '\n' | tr -d ' ')
 
 # Ensure numbers are valid
@@ -343,6 +343,39 @@ cat > "$OUTPUT_FILE" << 'HTMLEOF'
         footer a:hover {
             text-decoration: underline;
         }
+        /* Coverage Table Styles */
+        .coverage-container {
+            margin-top: 4rem;
+            margin-bottom: 4rem;
+        }
+        .coverage-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .coverage-table th, .coverage-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .coverage-table th {
+            font-weight: 600;
+            color: #ccd6f6;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .coverage-table tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .coverage-table tr:last-child td {
+            border-bottom: none;
+        }
+        .text-right { text-align: right !important; }
+        .coverage-high { color: #10b981; font-weight: 600; }
+        .coverage-medium { color: #f59e0b; font-weight: 600; }
+        .coverage-low { color: #ef4444; font-weight: 600; }
+        .file-cell { font-family: 'SF Mono', 'Fira Code', 'Roboto Mono', monospace; color: #a8b2d1; font-size: 0.9rem; }
     </style>
 </head>
 <body>
@@ -385,6 +418,8 @@ cat > "$OUTPUT_FILE" << 'HTMLEOF'
                 <!-- Tests will be inserted here -->
             </div>
         </div>
+
+        <!-- COVERAGE_PLACEHOLDER -->
         
         <footer>
             Automatically generated from test results
@@ -412,11 +447,27 @@ cat > "$OUTPUT_FILE" << 'HTMLEOF'
 </html>
 HTMLEOF
 
+# Generate Coverage HTML
+echo "Generating coverage table..."
+python3 .github/scripts/generate-coverage-table.py "${COVERAGE_JSON:-coverage.json}" > coverage_chunk.html
+
 # Replace placeholders in HTML
 sed -i.bak "s/PERCENTAGE_PLACEHOLDER/$PERCENTAGE/g" "$OUTPUT_FILE"
 sed -i.bak "s/PASSED_PLACEHOLDER/$PASSED_TESTS/g" "$OUTPUT_FILE"
 sed -i.bak "s/TOTAL_PLACEHOLDER/$TOTAL_TESTS/g" "$OUTPUT_FILE"
 sed -i.bak "s|TESTS_JSON_PLACEHOLDER|$TESTS_JSON|g" "$OUTPUT_FILE"
+
+# Inject Coverage HTML using awk for safe multiline insertion
+# We use a temporary file to construct the final output
+awk '
+    /<!-- COVERAGE_PLACEHOLDER -->/ {
+        system("cat coverage_chunk.html")
+        next
+    }
+    { print }
+' "$OUTPUT_FILE" > "$OUTPUT_FILE.tmp" && mv "$OUTPUT_FILE.tmp" "$OUTPUT_FILE"
+
+rm -f coverage_chunk.html
 
 # Clean up backup file
 rm -f "$OUTPUT_FILE.bak"

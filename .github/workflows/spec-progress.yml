@@ -24,8 +24,16 @@ jobs:
 
       # 1. Run tests with nextest to generate JUnit XML
       - name: Run Tests with nextest
-        run: cargo nextest run --no-fail-fast --all-features --workspace 2>&1 | tee test_output.txt
+        run: cargo nextest run --color never --no-fail-fast --all-features --workspace 2>&1 | tee test_output.txt
         continue-on-error: true
+
+      # 2. Generate Coverage Report
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@cargo-llvm-cov
+
+      - name: Generate Coverage JSON
+        run: cargo llvm-cov --all-features --workspace --json --output-path coverage.json
+
 
       # 3. Generate Custom "Are We Mod Yet?" Page
       - name: Generate Progress Page

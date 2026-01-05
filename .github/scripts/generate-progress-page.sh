@@ -449,7 +449,18 @@ HTMLEOF
 
 # Generate Coverage HTML
 echo "Generating coverage table..."
-python3 .github/scripts/generate-coverage-table.py "${COVERAGE_JSON:-coverage.json}" > coverage_chunk.html
+COVERAGE_FILE="${COVERAGE_JSON:-coverage.json}"
+
+if [ -f "$COVERAGE_FILE" ]; then
+    echo "ℹ️  Found coverage file: $COVERAGE_FILE"
+    ls -l "$COVERAGE_FILE"
+else
+    echo "⚠️  Warning: Coverage file '$COVERAGE_FILE' not found in current directory!"
+    echo "Debug: Listing current directory:"
+    ls -la
+fi
+
+python3 .github/scripts/generate-coverage-table.py "$COVERAGE_FILE" > coverage_chunk.html
 
 # Replace placeholders in HTML
 sed -i.bak "s/PERCENTAGE_PLACEHOLDER/$PERCENTAGE/g" "$OUTPUT_FILE"

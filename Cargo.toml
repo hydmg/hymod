@@ -1,11 +1,36 @@
 [package]
 name = "hymod"
-version = "0.1.0"
+version = "0.0.2"
 edition = "2021"
 
 [[bin]]
 name = "hymod"
 path = "cli/src/main.rs"
+
+[[test]]
+name = "new_integration"
+path = "cli/tests/new_integration.rs"
+
+[[test]]
+name = "build_integration"
+path = "cli/tests/build_integration.rs"
+
+[[test]]
+name = "link_integration"
+path = "cli/tests/link_integration.rs"
+
+[[test]]
+name = "dev_integration"
+path = "cli/tests/dev_integration.rs"
+
+[[test]]
+name = "deploy_integration"
+path = "cli/tests/deploy_integration.rs"
+
+[[test]]
+name = "server_integration"
+path = "cli/tests/server_integration.rs"
+
 
 [dependencies]
 clap = { version = "4.5", features = ["derive"] }
@@ -17,6 +42,7 @@ features-deploy = { path = "features/deploy" }
 features-server = { path = "features/server" }
 core-plan = { path = "core/plan" }
 core-ops = { path = "core/ops" }
+anyhow = "1.0"
 
 [workspace]
 resolver = "2"

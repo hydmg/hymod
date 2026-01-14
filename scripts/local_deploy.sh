@@ -14,6 +14,7 @@ echo "Detected macOS. Proceeding with installation..."
 echo "Updating skeleton assets..."
 ./scripts/update_skeleton.sh
 
+
 # 3. Build Release
 echo "Building hymod in release mode..."
 cargo build --release

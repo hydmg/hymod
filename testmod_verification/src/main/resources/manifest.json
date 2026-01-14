@@ -1,0 +1,20 @@
+{
+  "Group": "<GROUP_ID>",
+  "Name": "testmod_verification",
+  "Version": "<VERSION>",
+  "Description": "<DESCRIPTION>",
+  "Authors": [
+    {
+      "Name": "<AUTHOR>"
+    }
+  ],
+  "Website": "",
+  "ServerVersion": "*",
+  "Dependencies": {},
+  "OptionalDependencies": {
+
+  },
+  "DisabledByDefault": false,
+  "Main": "<MAIN_CLASS>",
+  "IncludesAssetPack": false
+}

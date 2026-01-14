@@ -1,0 +1,50 @@
+plugins {
+    id 'java'
+    id 'org.jetbrains.gradle.plugin.idea-ext' version '1.3'
+}
+
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
+if (localPropertiesFile.exists()) {
+    localProperties.load(new FileInputStream(localPropertiesFile))
+}
+
+localProperties.each { prop ->
+    project.ext.set(prop.key, prop.value)
+}
+
+version = project.version
+
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(java_version)
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Hytale Server Dependency
+    implementation(files("$hytaleHome/$patchline/package/game/$game_build/Server/HytaleServer.jar"))
+}
+
+processResources {
+
+}
+
+def serverRunDir = file("$projectDir/run")
+
+idea {
+    project {
+        settings {
+            runConfigurations {
+                'HytaleServer'(org.jetbrains.gradle.ext.Application) {
+                    mainClass = '<MAIN_CLASS>'
+                    moduleName = project.idea.module.name + '.main'
+                    programParameters = "--allow-op --disable-sentry --assets=${file("$hytaleHome/$patchline/package/game/latest/Assets.zip").absolutePath} --mods=${file("src/main/").absolutePath} --auth-mode=authenticated"
+                    workingDirectory = serverRunDir.absolutePath
+                }
+            }
+        }
+    }
+}

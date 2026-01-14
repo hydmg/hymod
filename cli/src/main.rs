@@ -1,8 +1,25 @@
 use clap::{Parser, Subcommand};
 
+const SKELETON_BYTES: &[u8] = include_bytes!("../../assets/skeleton.zip");
+
+// Declare CLI command modules
+#[path = "../build/mod.rs"]
+mod build;
+#[path = "../deploy/mod.rs"]
+mod deploy;
+#[path = "../dev/mod.rs"]
+mod dev;
+#[path = "../link/mod.rs"]
+mod link;
+#[path = "../new/mod.rs"]
+mod new;
+#[path = "../server/mod.rs"]
+mod server;
+
 #[derive(Parser)]
 #[command(name = "hymod")]
-#[command(about = "Hytale mod development workflow tool", long_about = None)]
+#[command(about = "Hytale Mod Development Kit", long_about = None)]
+#[command(version)]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
@@ -11,170 +28,96 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     /// Create a new mod project
-    New {
-        name: String,
-        #[arg(long)]
-        path: Option<String>,
-        #[arg(long)]
-        group: Option<String>,
-        #[arg(long)]
-        package: Option<String>,
-        #[arg(long)]
-        no_ui_dir: bool,
-    },
+    New(new::NewCommand),
 
     /// Build the current mod
-    Build {
-        #[arg(long)]
-        release: bool,
-    },
+    Build(build::BuildCommand),
 
     /// Link mod to a local server
-    Link { server_name: Option<String> },
+    Link(link::LinkCommand),
 
     /// Development workflow with auto-rebuild
-    Dev {
-        server_name: Option<String>,
-        #[arg(long)]
-        watch: bool,
-        #[arg(long)]
-        restart_cmd: Option<String>,
-    },
+    Dev(dev::DevCommand),
 
     /// Deploy mod to remote server
-    Deploy {
-        server_name: Option<String>,
-        #[arg(long)]
-        transport: Option<String>,
-        #[arg(long)]
-        dry_run: bool,
-    },
+    Deploy(deploy::DeployCommand),
 
     /// Manage server configurations
-    Server {
-        #[command(subcommand)]
-        cmd: ServerSubcommand,
-    },
-    /* Store and Status features removed - uncomment when implementing
-    /// Manage artifact store
-    Store {
-        #[command(subcommand)]
-        cmd: StoreSubcommand,
-    },
-
-    /// Check mod and server status
-    Status { server_name: Option<String> },
-    */
-}
-
-#[derive(Subcommand)]
-enum ServerSubcommand {
-    /// List all configured servers
-    List,
-    /// Add a new server configuration
-    Add { name: String },
-    /// Show server configuration details
-    Show { name: String },
-    /// Test server connectivity
-    Test { name: String },
-}
-
-#[derive(Subcommand)]
-enum StoreSubcommand {
-    /// List versions for a mod
-    List { mod_id: String },
-    /// Get path to a specific mod version
-    Path { mod_id: String, version: String },
+    #[command(subcommand)]
+    Server(server::ServerCommand),
 }
 
 fn main() {
     // Parse command-line arguments
     let cli = Cli::parse();
 
+    // Initialize Executor (defaulting dry_run to false for now, or TODO: add global flag)
+    let executor = core_ops::Executor::new(false);
+
     // Route to appropriate feature module
     match cli.command {
-        Commands::New {
-            name,
-            path,
-            group,
-            package,
-            no_ui_dir,
-        } => {
+        Commands::New(cmd) => {
             let args = features_new::NewArgs {
-                name,
-                path,
-                group,
-                package,
-                no_ui_dir,
+                name: cmd.name,
+                path: cmd.path,
+                group: cmd.group,
+                package: cmd.package,
+                no_ui_dir: cmd.no_ui_dir,
             };
-            let _plan = features_new::generate_plan(args);
-            // TODO: Pass plan to core::ops::execute()
+            let plan = features_new::generate_plan(args, SKELETON_BYTES);
+            if let Err(e) = executor.execute(&plan) {
+                eprintln!("Error executing plan: {}", e);
+                std::process::exit(1);
+            }
         }
 
-        Commands::Build { release } => {
-            let args = features_build::BuildArgs { release };
+        Commands::Build(cmd) => {
+            let args = features_build::BuildArgs {
+                release: cmd.release,
+            };
             let _plan = features_build::generate_plan(args);
             // TODO: Pass plan to core::ops::execute()
         }
 
-        Commands::Link { server_name } => {
-            let args = features_link::LinkArgs { server_name };
+        Commands::Link(cmd) => {
+            let args = features_link::LinkArgs {
+                server_name: cmd.server_name,
+            };
             let _plan = features_link::generate_plan(args);
             // TODO: Pass plan to core::ops::execute()
         }
 
-        Commands::Dev {
-            server_name,
-            watch,
-            restart_cmd,
-        } => {
+        Commands::Dev(cmd) => {
             let args = features_dev::DevArgs {
-                server_name,
-                watch,
-                restart_cmd,
+                server_name: cmd.server_name,
+                watch: cmd.watch,
+                restart_cmd: cmd.restart_cmd,
             };
             features_dev::run_loop(args);
         }
 
-        Commands::Deploy {
-            server_name,
-            transport,
-            dry_run,
-        } => {
+        Commands::Deploy(cmd) => {
             let args = features_deploy::DeployArgs {
-                server_name,
-                transport,
-                dry_run,
+                server_name: cmd.server_name,
+                transport: cmd.transport,
+                dry_run: cmd.dry_run,
             };
             let _plan = features_deploy::generate_plan(args);
             // TODO: Pass plan to core::ops::execute()
         }
 
-        Commands::Server { cmd } => {
+        Commands::Server(cmd) => {
             let server_cmd = match cmd {
-                ServerSubcommand::List => features_server::ServerCommand::List,
-                ServerSubcommand::Add { name } => features_server::ServerCommand::Add { name },
-                ServerSubcommand::Show { name } => features_server::ServerCommand::Show { name },
-                ServerSubcommand::Test { name } => features_server::ServerCommand::Test { name },
+                server::ServerCommand::List => features_server::ServerCommand::List,
+                server::ServerCommand::Add { name } => features_server::ServerCommand::Add { name },
+                server::ServerCommand::Show { name } => {
+                    features_server::ServerCommand::Show { name }
+                }
+                server::ServerCommand::Test { name } => {
+                    features_server::ServerCommand::Test { name }
+                }
             };
             features_server::execute(server_cmd);
-        } /* Store and Status features removed - uncomment when implementing
-          Commands::Store { cmd } => {
-              let store_cmd = match cmd {
-                  StoreSubcommand::List { mod_id } => features_store::StoreCommand::List { mod_id },
-                  StoreSubcommand::Path { mod_id, version } => {
-                      features_store::StoreCommand::Path { mod_id, version }
-                  }
-              };
-              features_store::execute(store_cmd);
-          }
-
-          Commands::Status { server_name } => {
-              let args = features_status::StatusArgs { server_name };
-              features_status::execute(args);
-          }
-          */
+        }
     }
-
-    todo!("Wire up clap routing and plan execution");
 }

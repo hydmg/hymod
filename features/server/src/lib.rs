@@ -6,5 +6,6 @@ pub enum ServerCommand {
 }
 
 pub fn execute(cmd: ServerCommand) {
+    let _ = cmd;
     todo!()
 }

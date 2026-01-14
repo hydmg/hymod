@@ -3,7 +3,7 @@ fn main() {
     // We need to run the shell script at scripts/update_skeleton.sh relative to root
 
     // Rerun if the script changes
-    // println!("cargo:rerun-if-changed=scripts/update_skeleton.sh");
+    println!("cargo:rerun-if-changed=scripts/update_skeleton.sh");
 
     // Execute the script
     // Note: This relies on a *nix environment (bash).

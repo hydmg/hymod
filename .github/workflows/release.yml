@@ -1,0 +1,94 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            binary_name: hymod
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            binary_name: hymod
+          - os: macos-13
+            target: x86_64-apple-darwin
+            binary_name: hymod
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            binary_name: hymod.exe
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Build
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Get Version
+        shell: bash
+        run: |
+          VERSION=$(grep "^version" Cargo.toml | head -n 1 | cut -d '"' -f 2)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Prepare Artifact
+        shell: bash
+        run: |
+          SRC="target/${{ matrix.target }}/release/${{ matrix.binary_name }}"
+          DEST="hymod-${{ env.VERSION }}-${{ matrix.target }}"
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            DEST="$DEST.exe"
+          fi
+          
+          cp "$SRC" "$DEST"
+          echo "ARTIFACT_PATH=$DEST" >> $GITHUB_ENV
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hymod-${{ matrix.target }}
+          path: ${{ env.ARTIFACT_PATH }}
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Generate Short SHA
+        id: slug
+        run: echo "sha8=$(echo ${{ github.sha }} | cut -c1-8)" >> $GITHUB_OUTPUT
+
+      - name: List Artifacts
+        run: ls -R artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: dev-${{ steps.slug.outputs.sha8 }}
+          name: Development Build ${{ steps.slug.outputs.sha8 }}
+          files: artifacts/*
+          draft: false
+          prerelease: true

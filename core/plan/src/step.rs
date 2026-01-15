@@ -9,6 +9,10 @@ pub enum Step {
         path: String,
         content: String,
     }, // Content simplified for skeleton
+    WriteBytes {
+        path: String,
+        content: Vec<u8>,
+    },
     Mkdir {
         path: String,
     },
@@ -54,6 +58,7 @@ impl std::fmt::Display for Step {
                 write!(f, "RUN      {} {}    {}", cmd, args_str, cwd_str)
             }
             Step::WriteFile { path, .. } => write!(f, "WRITE     {}", path),
+            Step::WriteBytes { path, .. } => write!(f, "WRITE(B)  {}", path),
             Step::Mkdir { path } => write!(f, "MKDIR     {}", path),
             Step::CopyFile { from, to } => write!(f, "COPY      {} -> {}", from, to),
             Step::Symlink { from, to } => write!(f, "SYMLINK   {} -> {}", to, from), // "link -> target" visual flow

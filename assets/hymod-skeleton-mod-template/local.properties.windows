@@ -1,0 +1,10 @@
+# Windows Hytale Installation Path configuration
+# Rename this file to local.properties to use it.
+
+# OPTION 1: Use forward slashes (Recommended, works reliably)
+hytaleHome=C:/Users/<USERNAME>/AppData/Local/Hytale
+
+# OPTION 2: Use double backslashes (If you prefer backslashes, you MUST double them to escape)
+# hytaleHome=C:\\Users\\YOUR_USER\\AppData\\Local\\Hytale
+
+# DO NOT use single backslashes like C:\Users... because \ is an escape character.

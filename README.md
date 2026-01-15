@@ -53,3 +53,49 @@ cargo llvm-cov --all-features --workspace --html
 ```
 
 The report will be generated in `./target/llvm-cov/html/index.html`.
+
+## Configuration Reference
+
+### Global Configuration
+Global settings are stored in `~/.hymod/config.yaml`. These provide defaults for the `hymod new` command.
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `author` | String | None | Default author name for new mods. |
+| `username` | String | None | System username replacement (e.g. for `local.properties`). |
+| `group` | String | None | Default package group prefix (e.g., `com.yourname`). |
+| `version` | String | None | Default initial version for new mods (e.g., `1.0.0`). |
+| `description` | String | None | Default description for new mods. |
+
+### Server Configuration
+Server definitions are stored in `~/.hymod/servers.d/<name>.yaml`. These define connection and deployment details for Hytale servers.
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `server.name` | String | **Required** | Unique name for the server configuration. |
+| `server.kind` | String | **Required** | Server type: `local` or `ssh`. |
+| `server.server_root` | String | **Required** | Absolute path to the server root directory. |
+| `server.mods_dir` | String | **Required** | Path to the mods directory (relative to `server_root` or absolute). |
+| `server.restart.cmd` | String | **Required** | Command to restart the server (e.g., `systemctl restart hytale`). |
+| `server.ssh.host` | String | **Required** (SSH) | Hostname or IP address for SSH connection. |
+| `server.ssh.user` | String | **Required** (SSH) | Username for SSH connection. |
+| `server.ssh.port` | Number | `22` | Port for SSH connection. |
+| `server.ssh.identity_file` | String | None | Path to private key file for SSH authentication. |
+| `server.ssh.known_hosts_file`| String | None | Path to custom `known_hosts` file. |
+| `server.upload.method` | String | **Required** | Upload method: `rsync` or `scp`. |
+| `server.upload.rsync.opts` | String | None | Additional options for `rsync` command. |
+| `server.upload.scp.opts` | String | None | Additional options for `scp` command. |
+
+### Project Configuration
+Project-specific settings are stored in `hymod.yaml` in the root of your mod project.
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `schema_version` | Integer | `1` | Schema version of the configuration file. |
+| `mod.id` | String | **Required** | Unique identifier for the mod (e.g., `my-mod`). |
+| `mod.name` | String | **Required** | Human-readable name of the mod. |
+| `mod.version` | String | **Required** | Current version of the mod (SemVer). |
+| `mod.entrypoint` | String | **Required** | Main class or entrypoint for the mod. |
+| `defaults.server` | String | None | Default server to use for `dev`, `deploy`, and `link` commands if `--server` is not specified. |
+| `build.gradle.tasks` | List | `["build"]` | List of Gradle tasks to execute during build. |
+| `build.gradle.artifact_path` | String | None | Path to the build artifact (relative to project root). Overrides default detection. |

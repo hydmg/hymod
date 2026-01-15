@@ -1,9 +1,5 @@
-pub struct DevArgs {
-    pub server_name: Option<String>, // Optional, falls back to default
-    pub watch: bool,
-    pub restart_cmd: Option<String>,
-}
+pub mod args;
+pub mod cmd;
 
-pub fn run_loop(args: DevArgs) {
-    todo!()
-}
+pub use args::DevArgs;
+pub use cmd::run;

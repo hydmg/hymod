@@ -48,6 +48,13 @@ impl Executor {
             Box::new(handlers::fs::write_file::WriteFileHandler),
         );
         self.register(
+            Step::WriteBytes {
+                path: String::new(),
+                content: vec![],
+            },
+            Box::new(handlers::fs::write_bytes::WriteBytesHandler),
+        );
+        self.register(
             Step::CopyFile {
                 from: String::new(),
                 to: String::new(),

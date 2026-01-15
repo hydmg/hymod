@@ -1,4 +1,3 @@
-#[ignore]
 #[test]
 fn test_error_gradle_failure() {
     panic!(

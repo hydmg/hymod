@@ -1,4 +1,3 @@
-#[ignore]
 #[test]
 fn test_error_invalid_name_special_chars() {
     panic!(

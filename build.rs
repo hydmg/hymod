@@ -1,9 +1,6 @@
 fn main() {
-    // Only run if we are in the crate directory (sanity check, though build.rs always runs there)
-    // We need to run the shell script at scripts/update_skeleton.sh relative to root
-
-    // Rerun if the script changes
-    println!("cargo:rerun-if-changed=scripts/update_skeleton.sh");
+    // Update skeleton on EVERY build to ensure latest version
+    // No cargo:rerun-if-changed for skeleton = always runs
 
     // Execute the script
     // Use "sh" on Windows (Git Bash), "bash" on Linux/macOS

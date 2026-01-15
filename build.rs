@@ -6,8 +6,8 @@ fn main() {
     println!("cargo:rerun-if-changed=scripts/update_skeleton.sh");
 
     // Execute the script
-    // usage of "sh" command ensures it runs on Windows (via Git Bash / MSYS) and *nix.
-    let status_skeleton = std::process::Command::new("sh")
+    // usage of "bash" command ensures Bash-specific syntax works across platforms.
+    let status_skeleton = std::process::Command::new("bash")
         .arg("./scripts/update_skeleton.sh")
         .status();
 
@@ -36,7 +36,7 @@ fn main() {
     // Also watch the script itself
     println!("cargo:rerun-if-changed=scripts/bump_version.sh");
 
-    let status_bump = std::process::Command::new("sh")
+    let status_bump = std::process::Command::new("bash")
         .arg("./scripts/bump_version.sh")
         .status();
     match status_bump {

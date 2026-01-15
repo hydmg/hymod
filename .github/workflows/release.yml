@@ -22,7 +22,7 @@ jobs:
           - os: macos-latest
             target: aarch64-apple-darwin
             binary_name: hymod
-          - os: macos-13
+          - os: macos-15-intel
             target: x86_64-apple-darwin
             binary_name: hymod
           - os: windows-latest

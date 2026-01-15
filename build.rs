@@ -28,32 +28,37 @@ fn main() {
 
     // Bump version using VERSION file
     // We do NOT modify Cargo.toml to avoid infinite rebuild loops (Cargo detects manifest changes).
+    // Skip version bumping in CI to ensure consistent versions across all builds
 
-    // Rerun if the script changes
-    println!("cargo:rerun-if-changed=scripts/bump_version.sh");
-    // Watch source directories so build.rs runs when code changes
-    println!("cargo:rerun-if-changed=cli");
-    println!("cargo:rerun-if-changed=core");
-    println!("cargo:rerun-if-changed=features");
-    // Also watch the script itself
-    println!("cargo:rerun-if-changed=scripts/bump_version.sh");
+    let is_ci = std::env::var("CI").is_ok();
 
-    #[cfg(target_os = "windows")]
-    let shell = "sh";
-    #[cfg(not(target_os = "windows"))]
-    let shell = "bash";
+    if !is_ci {
+        // Rerun if the script changes
+        println!("cargo:rerun-if-changed=scripts/bump_version.sh");
+        // Watch source directories so build.rs runs when code changes
+        println!("cargo:rerun-if-changed=cli");
+        println!("cargo:rerun-if-changed=core");
+        println!("cargo:rerun-if-changed=features");
+        // Also watch the script itself
+        println!("cargo:rerun-if-changed=scripts/bump_version.sh");
 
-    let status_bump = std::process::Command::new(shell)
-        .arg("./scripts/bump_version.sh")
-        .status();
-    match status_bump {
-        Ok(s) => {
-            if !s.success() {
-                panic!("Failed to bump version: exit code {:?}", s.code());
+        #[cfg(target_os = "windows")]
+        let shell = "sh";
+        #[cfg(not(target_os = "windows"))]
+        let shell = "bash";
+
+        let status_bump = std::process::Command::new(shell)
+            .arg("./scripts/bump_version.sh")
+            .status();
+        match status_bump {
+            Ok(s) => {
+                if !s.success() {
+                    panic!("Failed to bump version: exit code {:?}", s.code());
+                }
             }
-        }
-        Err(e) => {
-            panic!("Failed to execute bump_version.sh: {}", e);
+            Err(e) => {
+                panic!("Failed to execute bump_version.sh: {}", e);
+            }
         }
     }
 

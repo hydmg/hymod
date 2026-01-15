@@ -9,6 +9,10 @@ fn test_skeleton_plan_generation() {
         group: None,
         package: None,
         no_ui_dir: false,
+        author: None,
+        version: None,
+        desc: None,
+        interactive: false,
     };
 
     let skeleton_bytes = include_bytes!("../../../assets/skeleton.zip");

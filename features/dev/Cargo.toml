@@ -4,4 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+anyhow = "1.0"
+colored = "2.0"
+walkdir = "2.3"
 core-plan = { path = "../../core/plan" }
+core-config = { path = "../../core/config" }

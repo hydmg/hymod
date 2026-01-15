@@ -7,3 +7,6 @@ edition = "2021"
 core-plan = { path = "../../core/plan" }
 zip = "0.6"
 clap = { version = "4.5", features = ["derive"] }
+core-config = { path = "../../core/config" }
+dialoguer = "0.11"
+

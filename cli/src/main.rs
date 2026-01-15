@@ -5,6 +5,8 @@ use clap::{Parser, Subcommand};
 #[path = "../build/mod.rs"]
 mod build;
 mod command;
+#[path = "../config/mod.rs"]
+mod config;
 #[path = "../deploy/mod.rs"]
 mod deploy;
 #[path = "../dev/mod.rs"]
@@ -45,6 +47,9 @@ enum Commands {
     /// Manage server configurations
     #[command(subcommand)]
     Server(server::ServerCommand),
+
+    /// Manage global configuration
+    Config(config::ConfigCommand),
 }
 
 impl CliCommand for Commands {
@@ -56,6 +61,7 @@ impl CliCommand for Commands {
             Commands::Dev(cmd) => cmd.run(executor),
             Commands::Deploy(cmd) => cmd.run(executor),
             Commands::Server(cmd) => cmd.run(executor),
+            Commands::Config(cmd) => cmd.run(executor),
         }
     }
 }

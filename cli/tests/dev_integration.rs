@@ -2,6 +2,7 @@
 mod dev_tests {
     mod test_default_server_dev_local;
     mod test_default_server_dev_validates_local;
+    mod test_deploy_to_target;
     mod test_dev_default_server_from_config;
     mod test_dev_full_pipeline;
     mod test_dev_no_default_server_error;

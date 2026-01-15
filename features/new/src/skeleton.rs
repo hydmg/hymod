@@ -1,9 +1,14 @@
 use core_plan::Step;
+use std::collections::HashMap;
 use std::io::Read;
 use std::path::Path;
 use zip::read::ZipArchive;
 
-pub fn generate_plan(name: &str, zip_data: &[u8]) -> Vec<Step> {
+pub fn generate_plan(
+    name: &str,
+    zip_data: &[u8],
+    replacements: &HashMap<String, String>,
+) -> Vec<Step> {
     let mut steps = Vec::new();
     let cursor = std::io::Cursor::new(zip_data);
     let mut archive = ZipArchive::new(cursor).expect("Failed to read skeleton zip");
@@ -44,6 +49,24 @@ pub fn generate_plan(name: &str, zip_data: &[u8]) -> Vec<Step> {
             }
         }
 
+        // Path rewriting for Java package structure
+        // If path starts with src/main/java/com/example/skeleton, rewrite it.
+        // We rely on replacements containing <PACKAGE_DIR>
+        let path_str_chk = rel_path.to_string_lossy();
+        if path_str_chk.contains("src/main/java/com/example/skeleton") {
+            if let Some(pkg_dir) = replacements.get("<PACKAGE_DIR>") {
+                // simple string replace for the directory part
+                // Note: using / for replacement might be OS sensitive, but PathBuf handles it?
+                // pkg_dir is calculated using /.
+                // Let's coerce to OS separator if needed or just replace string.
+                let new_path_str = path_str_chk.replace(
+                    "src/main/java/com/example/skeleton",
+                    &format!("src/main/java/{}", pkg_dir),
+                );
+                rel_path = std::path::PathBuf::from(new_path_str);
+            }
+        }
+
         // Prepend the project name as the root directory
         let dest_path = Path::new(name).join(rel_path);
         let dest_path_str = dest_path.to_string_lossy().into_owned();
@@ -60,9 +83,11 @@ pub fn generate_plan(name: &str, zip_data: &[u8]) -> Vec<Step> {
             if is_text_file(&dest_path_str) {
                 // Try treating as UTF-8 for templating
                 if let Ok(content_str) = String::from_utf8(content_bytes.clone()) {
-                    let replaced = content_str
-                        .replace("<MOD_ID>", name)
-                        .replace("<MOD_NAME>", name); // Also replace MOD_NAME
+                    let mut replaced = content_str;
+                    for (k, v) in replacements {
+                        replaced = replaced.replace(k, v);
+                    }
+
                     steps.push(Step::WriteFile {
                         path: dest_path_str,
                         content: replaced,
@@ -78,10 +103,6 @@ pub fn generate_plan(name: &str, zip_data: &[u8]) -> Vec<Step> {
             });
         }
     }
-
-    // Sort steps to ensure mkdirs happen before file writes (though core/ops usually handles parent dirs)
-    // But it's good practice. For now we rely on the order in the zip or just let mkdir -p handle it.
-    // Actually, Step::WriteFile does mkdir -p handling in the handler.
 
     steps
 }
@@ -103,8 +124,6 @@ fn is_text_file(path: &str) -> bool {
                 | "gitignore"
         )
     } else {
-        // Dotfiles like .gitignore might not have "extension" relative to filename if it starts with dot?
-        // Path::extension handles .gitignore correctly (returns gitignore)
         path.ends_with(".gitignore")
     }
 }

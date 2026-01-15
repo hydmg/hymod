@@ -2,11 +2,13 @@ use clap::Args;
 
 #[derive(Args, Debug)]
 pub struct DevCommand {
-    pub server_name: Option<String>,
-    #[arg(long)]
-    pub watch: bool,
-    #[arg(long)]
-    pub restart_cmd: Option<String>,
+    /// Optional target server name or path to deploy to
+    #[arg(index = 1)]
+    pub target: Option<String>,
+
+    /// Path to the mod directory (default: current directory)
+    #[arg(long, short)]
+    pub path: Option<std::path::PathBuf>,
 }
 
 use crate::command::CliCommand;
@@ -16,11 +18,10 @@ use core_ops::Executor;
 impl CliCommand for DevCommand {
     fn run(&self, _executor: &Executor) -> Result<()> {
         let args = features_dev::DevArgs {
-            server_name: self.server_name.clone(),
-            watch: self.watch,
-            restart_cmd: self.restart_cmd.clone(),
+            target: self.target.clone(),
+            path: self.path.clone(),
         };
-        features_dev::run_loop(args);
+        features_dev::run(args)?;
         Ok(())
     }
 }

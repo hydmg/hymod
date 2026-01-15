@@ -1,0 +1,3 @@
+# Linux Hytale Installation Path
+# Rename this file to local.properties to use it.
+hytaleHome=/home/<USERNAME>/.local/share/Hytale

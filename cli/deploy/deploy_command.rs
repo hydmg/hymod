@@ -21,7 +21,13 @@ impl CliCommand for DeployCommand {
             dry_run: self.dry_run,
         };
         let plan = features_deploy::generate_plan(args);
-        executor.execute(&plan)?;
+
+        if self.dry_run {
+            let dry_executor = Executor::new(true);
+            dry_executor.execute(&plan)?;
+        } else {
+            executor.execute(&plan)?;
+        }
         Ok(())
     }
 }

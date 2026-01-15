@@ -1,9 +1,4 @@
-pub struct HymodConfig {
-    pub mod_id: String,
-    pub version: String,
-    // ... other fields as needed
-}
-
-pub fn load(path: Option<&str>) -> Result<HymodConfig, String> {
-    todo!()
-}
+pub mod server;
+pub use server::*;
+pub mod user;
+pub use user::*;

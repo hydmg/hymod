@@ -2,9 +2,8 @@
 
 📊 [**Development Progress**](https://hydmg.github.io/hymod/)
 
-View your development progress:
+View hymod Development Progress:
 - **Test Dashboard** - All tests with pass/fail status (main page)
-- **Code Coverage Report** - Line-by-line coverage at [/coverage](https://hydmg.github.io/hymod/coverage/)
 
 ## License
 

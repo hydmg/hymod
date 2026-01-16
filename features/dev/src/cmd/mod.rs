@@ -1,10 +1,20 @@
 use crate::args::DevArgs;
 use anyhow::{bail, Context, Result};
 use colored::*;
+use serde::Deserialize;
 use std::env;
-use std::path::{Path, PathBuf};
+use std::fs;
+use std::path::PathBuf;
 use std::process::Command;
 use walkdir::WalkDir;
+
+#[derive(Deserialize)]
+struct Manifest {
+    #[serde(rename = "Name")]
+    name: String,
+    #[serde(rename = "Version")]
+    version: String,
+}
 
 pub fn run(args: DevArgs) -> Result<()> {
     // 1. Resolve mod directory
@@ -16,17 +26,18 @@ pub fn run(args: DevArgs) -> Result<()> {
     println!("{} {}", "Dev Loop:".blue().bold(), mod_dir.display());
 
     // 2. Run ./gradlew
+    #[cfg(windows)]
+    let gradle_wrapper = mod_dir.join("gradlew.bat");
+    #[cfg(not(windows))]
     let gradle_wrapper = mod_dir.join("gradlew");
+
     if !gradle_wrapper.exists() {
         bail!(
             "No gradle wrapper found at {}. Is this a mod directory?",
             gradle_wrapper.display()
         );
     }
-    let gradle_wrapper = gradle_wrapper
-        .canonicalize()
-        .context("Failed to canonicalize gradle wrapper path")?;
-
+    // canonicalize causes path issues on Windows (\\?\) so we use the path as-is.
     // Ensure executable on Unix
     #[cfg(unix)]
     {
@@ -152,11 +163,42 @@ pub fn run(args: DevArgs) -> Result<()> {
 
     // 5. Copy artifact
     let file_name = artifact.file_name().context("Artifact has no file name")?;
-    let dest_file = destination_dir.join(file_name);
+
+    // Try to read manifest.json for correct naming
+    let manifest_path = mod_dir.join("src/main/resources/manifest.json");
+    let target_name = if manifest_path.exists() {
+        if let Ok(content) = fs::read_to_string(&manifest_path) {
+            if let Ok(manifest) = serde_json::from_str::<Manifest>(&content) {
+                format!("{}-{}.jar", manifest.name, manifest.version)
+            } else {
+                println!(
+                    "{} Failed to parse manifest.json, using build artifact name",
+                    "!!".yellow()
+                );
+                file_name.to_string_lossy().into_owned()
+            }
+        } else {
+            println!(
+                "{} Failed to read manifest.json, using build artifact name",
+                "!!".yellow()
+            );
+            file_name.to_string_lossy().into_owned()
+        }
+    } else {
+        println!(
+            "{} No manifest.json found at {}, using build artifact name",
+            "!!".yellow(),
+            manifest_path.display()
+        );
+        file_name.to_string_lossy().into_owned()
+    };
+
+    let dest_file = destination_dir.join(&target_name);
 
     println!(
-        "{} Deploying to: {}",
+        "{} Deploying {} to: {}",
         ">>".green(),
+        target_name,
         destination_dir.display()
     );
     std::fs::copy(&artifact, &dest_file)

@@ -5,6 +5,7 @@ mod dev_tests {
     mod test_deploy_to_target;
     mod test_dev_default_server_from_config;
     mod test_dev_full_pipeline;
+    mod test_dev_manifest_naming;
     mod test_dev_no_default_server_error;
     mod test_dev_oneshot_flow;
     mod test_dev_override_restart;

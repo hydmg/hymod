@@ -9,6 +9,7 @@ mod deploy_tests {
     mod test_deploy_full_pipeline;
     mod test_deploy_identity_file;
     mod test_deploy_local_server_fail;
+    mod test_deploy_path_arg;
     mod test_deploy_remote_path_jar;
     mod test_deploy_remote_path_zip;
     mod test_deploy_restart_after_upload;

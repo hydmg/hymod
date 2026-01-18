@@ -7,6 +7,9 @@ pub struct DeployCommand {
     pub transport: Option<String>,
     #[arg(long)]
     pub dry_run: bool,
+    /// Path to the mod directory (default: current directory)
+    #[arg(long, short)]
+    pub path: Option<std::path::PathBuf>,
 }
 
 use crate::command::CliCommand;
@@ -19,6 +22,7 @@ impl CliCommand for DeployCommand {
             server_name: self.server_name.clone(),
             transport: self.transport.clone(),
             dry_run: self.dry_run,
+            path: self.path.clone(),
         };
         let plan = features_deploy::generate_plan(args);
 

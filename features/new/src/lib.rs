@@ -86,6 +86,13 @@ pub fn generate_plan(args: NewArgs, skeleton_bytes: &[u8]) -> core_plan::Plan {
     replacements.insert("<PACKAGE_DIR>".to_string(), package.replace('.', "/"));
     replacements.insert("<MAIN_CLASS>".to_string(), format!("{}.Main", package));
 
+    replacements.insert("com.example.skeleton".to_string(), package.clone());
+
+    // Add these LAST to allow overrides if needed, though HashMap order is arbitrary in iteration.
+    // Ideally we should do replacements in a deterministic or specific order, but for now simple string replacement
+    // works if keys don't overlap in a way that breaks things.
+    // "com.example.skeleton" is more specific than "com.example" so it should be fine if we don't have "com.example" rule.
+
     let steps = skeleton::generate_plan(&name, skeleton_bytes, &replacements);
     core_plan::Plan { steps }
 }

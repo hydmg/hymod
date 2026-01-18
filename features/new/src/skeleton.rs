@@ -52,18 +52,29 @@ pub fn generate_plan(
         // Path rewriting for Java package structure
         // If path starts with src/main/java/com/example/skeleton, rewrite it.
         // We rely on replacements containing <PACKAGE_DIR>
-        let path_str_chk = rel_path.to_string_lossy();
-        if path_str_chk.contains("src/main/java/com/example/skeleton") {
+        // Path rewriting for Java package structure
+        // If path starts with src/main/java/com/example/skeleton, rewrite it.
+        // We rely on replacements containing <PACKAGE_DIR>
+        let skeleton_pkg_path = Path::new("src")
+            .join("main")
+            .join("java")
+            .join("com")
+            .join("example")
+            .join("skeleton");
+
+        if rel_path.starts_with(&skeleton_pkg_path) {
             if let Some(pkg_dir) = replacements.get("<PACKAGE_DIR>") {
-                // simple string replace for the directory part
-                // Note: using / for replacement might be OS sensitive, but PathBuf handles it?
-                // pkg_dir is calculated using /.
-                // Let's coerce to OS separator if needed or just replace string.
-                let new_path_str = path_str_chk.replace(
-                    "src/main/java/com/example/skeleton",
-                    &format!("src/main/java/{}", pkg_dir),
-                );
-                rel_path = std::path::PathBuf::from(new_path_str);
+                // Remove the skeleton prefix
+                if let Ok(remaining) = rel_path.strip_prefix(&skeleton_pkg_path) {
+                    // Prefix with the new package dir
+                    // We need to ensure pkg_dir uses correct OS separators
+                    let new_pkg_path: std::path::PathBuf = pkg_dir.split('/').collect();
+                    rel_path = Path::new("src")
+                        .join("main")
+                        .join("java")
+                        .join(new_pkg_path)
+                        .join(remaining);
+                }
             }
         }
 

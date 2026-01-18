@@ -2,6 +2,7 @@ pub struct DeployArgs {
     pub server_name: Option<String>,
     pub transport: Option<String>,
     pub dry_run: bool,
+    pub path: Option<PathBuf>,
 }
 
 use core_config::{get_default_server, load_server_config, ServerKind};
@@ -17,6 +18,11 @@ pub fn generate_plan(args: DeployArgs) -> core_plan::Plan {
 
     let config = load_server_config(&server_name).expect("Failed to load server config");
 
+    // Resolve mod directory
+    let mod_dir = args
+        .path
+        .unwrap_or_else(|| std::env::current_dir().expect("Failed to get current directory"));
+
     let mut steps = Vec::new();
 
     // 1. Build
@@ -25,15 +31,17 @@ pub fn generate_plan(args: DeployArgs) -> core_plan::Plan {
     } else {
         "./gradlew"
     };
+
     steps.push(Step::RunProcess {
         cmd: gradlew.to_string(),
         args: vec!["build".to_string()],
-        cwd: None,
+        cwd: Some(mod_dir.to_string_lossy().to_string()),
     });
 
     // 2. Identify Artifact
     // Heuristic: Read gradle.properties to predict the name
-    let jar_name = if let Ok(content) = fs::read_to_string("gradle.properties") {
+    let gradle_props = mod_dir.join("gradle.properties");
+    let jar_name = if let Ok(content) = fs::read_to_string(&gradle_props) {
         let mut name = "mod".to_string();
         let mut version = "1.0.0".to_string();
         for line in content.lines() {
@@ -49,8 +57,11 @@ pub fn generate_plan(args: DeployArgs) -> core_plan::Plan {
         "mod.jar".to_string()
     };
 
-    let source_path = format!("build/libs/{}", jar_name);
-    // dest_path depends on kind
+    let source_path = mod_dir
+        .join("build/libs")
+        .join(&jar_name)
+        .to_string_lossy()
+        .to_string();
 
     // 3. Deploy
     match config.server.kind {
@@ -68,21 +79,21 @@ pub fn generate_plan(args: DeployArgs) -> core_plan::Plan {
             let remote_dest = format!("{}/{}", config.server.mods_dir, jar_name);
             if config.server.remote.is_some() {
                 // Determine transport
-                if args.transport.as_deref() == Some("scp") {
+                // Default to scp if not specified (or explicitly scp)
+                if args.transport.as_deref().unwrap_or("scp") == "rsync" {
+                    steps.push(Step::UploadRsync {
+                        local: source_path,
+                        remote: remote_dest,
+                        opts: "-avz".to_string(),
+                    });
+                } else {
+                    // Default SCP
                     steps.push(Step::UploadScp {
                         local: source_path,
                         remote: remote_dest,
                     });
-                } else {
-                    // Default rsync
-                    steps.push(Step::UploadRsync {
-                        local: source_path,
-                        remote: remote_dest,
-                        opts: "-avz".to_string(), // Default opts
-                    });
                 }
             } else {
-                // Should not happen if confirmed remote kind implies remote block, but safe to panic or error
                 panic!("Remote server config missing remote block");
             }
         }

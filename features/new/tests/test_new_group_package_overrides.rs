@@ -22,7 +22,7 @@ fn test_new_group_package_overrides() {
 
         // Add another file for control
         zip.start_file("root/README.md", options).unwrap();
-        zip.write_all(b"# <MOD_NAME>").unwrap();
+        zip.write_all(b"# <MOD_NAME> v<VERSION>").unwrap();
 
         zip.finish().unwrap();
     }
@@ -37,7 +37,7 @@ fn test_new_group_package_overrides() {
         package: None, // Should derive to com.mygroup.superping
         no_ui_dir: false,
         author: None,
-        version: None,
+        version: Some("1.2.3".to_string()),
         desc: None,
         interactive: false,
     };
@@ -64,6 +64,7 @@ fn test_new_group_package_overrides() {
             if path.contains("README.md") {
                 found_readme = true;
                 assert!(content.contains("# superping"));
+                assert!(content.contains("1.2.3"), "Version not replaced in README");
             }
         }
     }

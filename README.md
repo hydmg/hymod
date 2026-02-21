@@ -1,6 +1,6 @@
 # Hymod
 
-<img width="411" height="136" alt="hymodlogosmall" src="https://github.com/user-attachments/assets/f3c34442-f480-45c0-84ba-01d33b7bda17" />
+<img width="411" height="136" alt="hymodlogo" src="https://github.com/user-attachments/assets/73eca853-9560-4089-b2a9-68d6cd37693b" />
 
 View hymod Development Progress:
 - **Test Dashboard** - All tests with pass/fail status (main page)

@@ -3,7 +3,6 @@
 <img width="411" height="136" alt="hymodlogo" src="https://github.com/user-attachments/assets/73eca853-9560-4089-b2a9-68d6cd37693b" />
 
 View hymod Development Progress:
-- **Test Dashboard** - All tests with pass/fail status (main page)
 - 📊 [**Development Progress**](https://hydmg.github.io/hymod/)
 
 ## Why Hymod

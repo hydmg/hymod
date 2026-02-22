@@ -69,8 +69,98 @@ impl CliCommand for Commands {
 
 fn print_hymod_logo() {
     let logo = include_str!("ascii-art.txt");
-    print!("{logo}");
+    print!("{}", colorize_logo(logo));
     println!();
+}
+
+fn colorize_logo(logo: &str) -> String {
+    const RESET: &str = "\x1b[0m";
+    const NAVY: &str = "\x1b[38;5;60m";
+    const ORANGE_BRIGHT: &str = "\x1b[38;5;214m";
+    const ORANGE: &str = "\x1b[38;5;208m";
+    const STEEL: &str = "\x1b[38;5;245m";
+    const STEEL_DARK: &str = "\x1b[38;5;240m";
+    const STEEL_DEEP: &str = "\x1b[38;5;236m";
+
+    let mut out = String::with_capacity(logo.len() + 512);
+
+    for (row_idx, line) in logo.lines().enumerate() {
+        let row = row_idx + 1;
+        let wordmark_start = find_wordmark_start(line);
+        let mut current_color = "";
+
+        for (col_idx, ch) in line.chars().enumerate() {
+            let col = col_idx + 1;
+
+            if ch == ' ' {
+                if !current_color.is_empty() {
+                    out.push_str(RESET);
+                    current_color = "";
+                }
+                out.push(' ');
+                continue;
+            }
+
+            let is_wordmark = match wordmark_start {
+                Some(start) => col >= start,
+                None => false,
+            };
+
+            let target_color = if is_wordmark {
+                NAVY
+            } else if row <= 4 {
+                ORANGE_BRIGHT
+            } else if row <= 8 {
+                ORANGE
+            } else if row <= 12 {
+                STEEL
+            } else if row <= 16 {
+                STEEL_DARK
+            } else {
+                STEEL_DEEP
+            };
+
+            if current_color != target_color {
+                out.push_str(target_color);
+                current_color = target_color;
+            }
+            out.push(ch);
+        }
+
+        if !current_color.is_empty() {
+            out.push_str(RESET);
+        }
+        out.push('\n');
+    }
+
+    out
+}
+
+fn find_wordmark_start(line: &str) -> Option<usize> {
+    let mut seen_non_space = false;
+    let mut run_start = 0usize;
+    let mut run_len = 0usize;
+
+    for (col_idx, ch) in line.chars().enumerate() {
+        let col = col_idx + 1;
+
+        if ch == ' ' {
+            if run_len == 0 {
+                run_start = col;
+            }
+            run_len += 1;
+            continue;
+        }
+
+        if run_len >= 3 && seen_non_space && run_start > 20 {
+            return Some(col);
+        }
+
+        run_len = 0;
+        seen_non_space = true;
+    }
+
+    None
 }
 
 fn should_show_logo(args: &[OsString]) -> bool {

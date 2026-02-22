@@ -1,5 +1,6 @@
 use crate::command::CliCommand;
-use clap::{Parser, Subcommand};
+use clap::{CommandFactory, Parser, Subcommand};
+use std::ffi::OsString;
 
 // Declare CLI command modules
 #[path = "../build/mod.rs"]
@@ -66,9 +67,64 @@ impl CliCommand for Commands {
     }
 }
 
+fn print_hymod_logo() {
+    let o = "\x1b[38;5;208m"; // Orange
+    let g = "\x1b[1;30m"; // Dark Grey
+    let b = "\x1b[38;5;67m"; // Slate Blue
+    let n = "\x1b[0m"; // Reset
+
+    println!("{}   .^\\.      {} _                                 _ ", o, b);
+    println!(
+        "{}  / _  \\     {}| |__   _   _  _ __ ___    ___   __| |",
+        o, b
+    );
+    println!(
+        "{} /_/ \\__\\    {}| '_ \\ | | | || '_ ` _ \\  / _ \\ / _` |",
+        o, b
+    );
+    println!(
+        "{} \\ \\  _ /    {}| | | || |_| || | | | | || (_) | (_| |",
+        g, b
+    );
+    println!(
+        "{}  \\ \\/ /     {}|_| |_| \\__, ||_| |_| |_| \\___/ \\__,_|",
+        g, b
+    );
+    println!("{}   \\__/               {}|___/                         {}", g, b, n);
+}
+
+fn should_show_logo(args: &[OsString]) -> bool {
+    if args.len() == 1 {
+        return true;
+    }
+
+    matches!(
+        args.get(1).and_then(|arg| arg.to_str()),
+        Some("help") | Some("-h") | Some("--help")
+    ) || args
+        .iter()
+        .skip(1)
+        .any(|arg| matches!(arg.to_str(), Some("-h") | Some("--help")))
+}
+
 fn main() {
+    let args: Vec<OsString> = std::env::args_os().collect();
+    if should_show_logo(&args) {
+        print_hymod_logo();
+    }
+
+    if args.len() == 1 {
+        let mut cmd = Cli::command();
+        if let Err(e) = cmd.print_help() {
+            eprintln!("Error printing help: {}", e);
+            std::process::exit(1);
+        }
+        println!();
+        return;
+    }
+
     // Parse command-line arguments
-    let cli = Cli::parse();
+    let cli = Cli::parse_from(args);
 
     // Initialize Executor (defaulting dry_run to false for now, or TODO: add global flag)
     let executor = core_ops::Executor::new(false);
@@ -79,4 +135,3 @@ fn main() {
         std::process::exit(1);
     }
 }
-// change main

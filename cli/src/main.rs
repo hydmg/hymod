@@ -68,29 +68,9 @@ impl CliCommand for Commands {
 }
 
 fn print_hymod_logo() {
-    let o = "\x1b[38;5;208m"; // Orange
-    let g = "\x1b[1;30m"; // Dark Grey
-    let b = "\x1b[38;5;67m"; // Slate Blue
-    let n = "\x1b[0m"; // Reset
-
-    println!("{}   .^\\.      {} _                                 _ ", o, b);
-    println!(
-        "{}  / _  \\     {}| |__   _   _  _ __ ___    ___   __| |",
-        o, b
-    );
-    println!(
-        "{} /_/ \\__\\    {}| '_ \\ | | | || '_ ` _ \\  / _ \\ / _` |",
-        o, b
-    );
-    println!(
-        "{} \\ \\  _ /    {}| | | || |_| || | | | | || (_) | (_| |",
-        g, b
-    );
-    println!(
-        "{}  \\ \\/ /     {}|_| |_| \\__, ||_| |_| |_| \\___/ \\__,_|",
-        g, b
-    );
-    println!("{}   \\__/               {}|___/                         {}", g, b, n);
+    let logo = include_str!("ascii-art.txt");
+    print!("{logo}");
+    println!();
 }
 
 fn should_show_logo(args: &[OsString]) -> bool {

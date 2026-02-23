@@ -6,3 +6,4 @@ edition = "2021"
 [dependencies]
 core-plan = { path = "../../core/plan" }
 core-config = { path = "../../core/config" }
+core-path = { path = "../../core/path" }

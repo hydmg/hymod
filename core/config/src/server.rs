@@ -137,21 +137,46 @@ pub fn list_servers() -> Result<Vec<String>, String> {
 }
 
 pub fn get_default_server() -> Result<Option<String>, String> {
-    let dir = get_server_config_dir()?;
-    let path = dir.join("default");
-    if !path.exists() {
-        return Ok(None);
-    }
-    let content = fs::read_to_string(path).map_err(|e| e.to_string())?;
-    Ok(Some(content.trim().to_string()))
+    get_default_server_for_kind(&ServerKind::Remote)
 }
 
 pub fn set_default_server(name: &str) -> Result<(), String> {
+    set_default_server_for_kind(&ServerKind::Remote, name)
+}
+
+pub fn get_default_server_for_kind(kind: &ServerKind) -> Result<Option<String>, String> {
+    let dir = get_server_config_dir()?;
+    let path = dir.join(default_filename_for_kind(kind));
+    if path.exists() {
+        let content = fs::read_to_string(path).map_err(|e| e.to_string())?;
+        return Ok(Some(content.trim().to_string()));
+    }
+
+    // Backward compatibility: if only legacy default exists, use it as remote default.
+    if *kind == ServerKind::Remote {
+        let legacy_path = dir.join("default");
+        if legacy_path.exists() {
+            let content = fs::read_to_string(legacy_path).map_err(|e| e.to_string())?;
+            return Ok(Some(content.trim().to_string()));
+        }
+    }
+
+    Ok(None)
+}
+
+pub fn set_default_server_for_kind(kind: &ServerKind, name: &str) -> Result<(), String> {
     let dir = get_server_config_dir()?;
     if !dir.exists() {
         fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
     }
-    let path = dir.join("default");
+    let path = dir.join(default_filename_for_kind(kind));
     fs::write(path, name).map_err(|e| e.to_string())?;
     Ok(())
+}
+
+fn default_filename_for_kind(kind: &ServerKind) -> &'static str {
+    match kind {
+        ServerKind::Local => "default.local",
+        ServerKind::Remote => "default.remote",
+    }
 }

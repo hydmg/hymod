@@ -22,33 +22,22 @@ pub fn run(args: ServerAddArgs) {
         }
     };
 
-    let mut server_root = "/opt/hytale".to_string(); // Default
-    let mut remote_block = None;
-
-    match kind {
-        ServerKind::Local => {
-            server_root = args.uri.clone();
-        }
+    let (server_root, remote_block) = match kind {
+        ServerKind::Local => (args.uri.clone(), None),
         ServerKind::Remote => {
-            // Check if URI is user@host or just host
-            let parts: Vec<&str> = args.uri.split('@').collect();
-            let (user, host) = if parts.len() == 2 {
-                (parts[0].to_string(), parts[1].to_string())
-            } else {
-                ("root".to_string(), args.uri.clone()) // Default user root? Or current user?
-            };
-
-            remote_block = Some(RemoteBlock {
-                host,
-                user,
-                port: 22,
-                identity_file: None,
-                known_hosts_file: None,
-            });
-            // server_root stays default or we could parse it from URI if standard schemes supported it (ssh://user@host/path)
-            // For now, prompt implies just connection info.
+            let (user, host, parsed_server_root) = parse_remote_uri(&args.uri);
+            (
+                parsed_server_root,
+                Some(RemoteBlock {
+                    host,
+                    user,
+                    port: 22,
+                    identity_file: None,
+                    known_hosts_file: None,
+                }),
+            )
         }
-    }
+    };
 
     let config = ServerConfig {
         server: ServerBlock {
@@ -70,4 +59,54 @@ pub fn run(args: ServerAddArgs) {
     }
 
     println!("Server '{}' added successfully.", args.name);
+}
+
+fn parse_remote_uri(uri: &str) -> (String, String, String) {
+    let default_root = "/opt/hytale".to_string();
+
+    let (user, host_and_maybe_path) = match uri.split_once('@') {
+        Some((u, rest)) if !u.is_empty() => (u.to_string(), rest),
+        _ => ("root".to_string(), uri),
+    };
+
+    let (host, server_root) = match host_and_maybe_path.split_once(":/") {
+        Some((h, root_tail)) if !h.is_empty() => (h.to_string(), format!("/{}", root_tail)),
+        _ => (host_and_maybe_path.to_string(), default_root),
+    };
+
+    if host.is_empty() {
+        panic!("Invalid remote URI: host is required");
+    }
+
+    (user, host, server_root)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::parse_remote_uri;
+
+    #[test]
+    fn parses_user_host_and_path() {
+        let (user, host, server_root) =
+            parse_remote_uri("root@170.205.24.203:/root/playground/hymodtest");
+        assert_eq!(user, "root");
+        assert_eq!(host, "170.205.24.203");
+        assert_eq!(server_root, "/root/playground/hymodtest");
+    }
+
+    #[test]
+    fn parses_user_and_host_without_path() {
+        let (user, host, server_root) = parse_remote_uri("user@example.com");
+        assert_eq!(user, "user");
+        assert_eq!(host, "example.com");
+        assert_eq!(server_root, "/opt/hytale");
+    }
+
+    #[test]
+    fn parses_host_and_path_with_default_user() {
+        let (user, host, server_root) = parse_remote_uri("170.205.24.203:/srv/hytale");
+        assert_eq!(user, "root");
+        assert_eq!(host, "170.205.24.203");
+        assert_eq!(server_root, "/srv/hytale");
+    }
 }

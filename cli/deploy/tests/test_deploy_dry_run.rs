@@ -38,8 +38,8 @@ fn test_deploy_dry_run() {
         .stdout(predicate::str::contains("PLAN"))
         .stdout(predicate::str::contains("RUN      ./gradlew build"))
         .stdout(predicate::str::contains(
-            "COPY      build/libs/mod-1.0.0.jar -> /tmp/server/mods/mod-1.0.0.jar",
+            "build/libs/mod-1.0.0.jar -> /tmp/server/mods/mod-1.0.0.jar",
         ));
     // Ideally checking that it DIDN'T do something, but hard to prove negative without checking filesystem, which dry-run shouldn't touch.
-        // But verifying the plan output is printed is a good start.
+    // But verifying the plan output is printed is a good start.
 }

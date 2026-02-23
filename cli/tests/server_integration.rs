@@ -59,6 +59,40 @@ fn test_server_add_remote() {
 }
 
 #[test]
+fn test_server_add_remote_with_path_parses_server_root() {
+    let temp_home = TempDir::new().expect("failed to create temp dir");
+
+    Command::cargo_bin("hymod")
+        .expect("binary not found")
+        .env("HOME", temp_home.path())
+        .args([
+            "server",
+            "add",
+            "remote",
+            "hymodtest",
+            "root@170.205.24.203:/root/playground/hymodtest",
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(
+            "Server 'hymodtest' added successfully",
+        ));
+
+    let config_path = temp_home
+        .path()
+        .join(".hymod")
+        .join("servers.d")
+        .join("hymodtest.yaml");
+    assert!(config_path.exists());
+
+    let content = fs::read_to_string(config_path).unwrap();
+    assert!(content.contains("kind: remote"));
+    assert!(content.contains("user: root"));
+    assert!(content.contains("host: 170.205.24.203"));
+    assert!(content.contains("server_root: /root/playground/hymodtest"));
+}
+
+#[test]
 fn test_server_already_exists() {
     let temp_home = TempDir::new().expect("failed to create temp dir");
 
@@ -126,7 +160,7 @@ fn test_server_default() {
         .args(["server", "default", "local", "s1"])
         .assert()
         .success()
-        .stdout(predicate::str::contains("Default server set to 's1'"));
+        .stdout(predicate::str::contains("Default local server set to 's1'"));
 
     // Check list highlight
     Command::cargo_bin("hymod")
@@ -136,6 +170,53 @@ fn test_server_default() {
         .assert()
         .success()
         .stdout(predicate::str::contains("* s1 [local]"));
+}
+
+#[test]
+fn test_server_default_separate_local_and_remote() {
+    let temp_home = TempDir::new().expect("failed to create temp dir");
+
+    Command::cargo_bin("hymod")
+        .expect("binary not found")
+        .env("HOME", temp_home.path())
+        .args(["server", "add", "local", "local1", "/tmp/local1"])
+        .assert()
+        .success();
+
+    Command::cargo_bin("hymod")
+        .expect("binary not found")
+        .env("HOME", temp_home.path())
+        .args(["server", "add", "remote", "remote1", "user@example.com"])
+        .assert()
+        .success();
+
+    Command::cargo_bin("hymod")
+        .expect("binary not found")
+        .env("HOME", temp_home.path())
+        .args(["server", "default", "local", "local1"])
+        .assert()
+        .success();
+
+    Command::cargo_bin("hymod")
+        .expect("binary not found")
+        .env("HOME", temp_home.path())
+        .args(["server", "default", "remote", "remote1"])
+        .assert()
+        .success();
+
+    let default_local = temp_home
+        .path()
+        .join(".hymod")
+        .join("servers.d")
+        .join("default.local");
+    let default_remote = temp_home
+        .path()
+        .join(".hymod")
+        .join("servers.d")
+        .join("default.remote");
+
+    assert_eq!(fs::read_to_string(default_local).unwrap().trim(), "local1");
+    assert_eq!(fs::read_to_string(default_remote).unwrap().trim(), "remote1");
 }
 
 #[test]

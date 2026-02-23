@@ -66,8 +66,8 @@ impl std::fmt::Display for Step {
                 local,
                 remote,
                 opts: _,
-            } => write!(f, "UPLOAD    {} -> {}", local, remote),
-            Step::UploadScp { local, remote } => write!(f, "UPLOAD    {} -> {}", local, remote),
+            } => write!(f, "UPLOAD(RSYNC) {} -> {}", local, remote),
+            Step::UploadScp { local, remote } => write!(f, "UPLOAD(SCP)   {} -> {}", local, remote),
             Step::SshRun {
                 host: _,
                 user: _,

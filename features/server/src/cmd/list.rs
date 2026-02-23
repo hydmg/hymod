@@ -1,7 +1,7 @@
 use crate::args::list_args::ServerListArgs;
 use colored::*;
 use core_config::server::{
-    get_default_server, list_servers, load_server_config, ServerConfig, ServerKind,
+    get_default_server_for_kind, list_servers, load_server_config, ServerConfig, ServerKind,
 };
 
 pub fn run(args: ServerListArgs) {
@@ -13,8 +13,8 @@ pub fn run(args: ServerListArgs) {
         }
     };
 
-    let default_server = get_default_server().unwrap_or(None);
-    let default_name = default_server.as_deref().unwrap_or("");
+    let default_local = get_default_server_for_kind(&ServerKind::Local).unwrap_or(None);
+    let default_remote = get_default_server_for_kind(&ServerKind::Remote).unwrap_or(None);
 
     let mut local_servers = Vec::new();
     let mut remote_servers = Vec::new();
@@ -42,12 +42,12 @@ pub fn run(args: ServerListArgs) {
 
     if !local_servers.is_empty() {
         println!("\n{}", "Local Servers".bold().underline());
-        print_local_table(&local_servers, default_name);
+        print_local_table(&local_servers, default_local.as_deref().unwrap_or(""));
     }
 
     if !remote_servers.is_empty() {
         println!("\n{}", "Remote Servers".bold().underline());
-        print_remote_table(&remote_servers, default_name);
+        print_remote_table(&remote_servers, default_remote.as_deref().unwrap_or(""));
     }
 
     if local_servers.is_empty() && remote_servers.is_empty() {

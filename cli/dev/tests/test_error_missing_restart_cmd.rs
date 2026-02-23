@@ -1,5 +1,3 @@
-
-
 #[test]
 fn test_error_missing_restart_cmd() {
     println!(

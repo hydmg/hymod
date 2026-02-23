@@ -31,8 +31,10 @@ fn test_deploy_transport_rsync_explicit() {
         .expect("binary not found")
         .current_dir(&project_dir)
         .env("HOME", home_dir.path())
+        .env("PATH", "")
         .args(["deploy", "prod", "--transport", "rsync", "--dry-run"])
         .assert()
         .success()
-        .stdout(predicate::str::contains("UPLOAD(RSYNC)"));
+        .stdout(predicate::str::contains("UPLOAD(RSYNC)"))
+        .stdout(predicate::str::contains("UPLOAD(SCP)").not());
 }

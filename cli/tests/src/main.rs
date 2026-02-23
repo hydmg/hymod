@@ -144,7 +144,9 @@ fn main() {
             let args = features_deploy::DeployArgs {
                 server_name,
                 transport,
+                restart: false,
                 dry_run,
+                path: None,
             };
             let _plan = features_deploy::generate_plan(args);
             // TODO: Pass plan to core::ops::execute()

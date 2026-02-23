@@ -69,8 +69,11 @@ impl CliCommand for ServerCommand {
                     server_root: None,
                 },
             ),
-            ServerCommand::Default { kind: _, name } => features_server::ServerCommand::Default(
-                features_server::args::default_args::ServerDefaultArgs { name: name.clone() },
+            ServerCommand::Default { kind, name } => features_server::ServerCommand::Default(
+                features_server::args::default_args::ServerDefaultArgs {
+                    kind: kind.clone(),
+                    name: name.clone(),
+                },
             ),
             ServerCommand::Remove { name } => features_server::ServerCommand::Remove(
                 features_server::args::remove_args::ServerRemoveArgs { name: name.clone() },

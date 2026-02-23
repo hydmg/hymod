@@ -1,20 +1,10 @@
 use crate::args::DevArgs;
 use anyhow::{bail, Context, Result};
 use colored::*;
-use serde::Deserialize;
+use core_path::resolve_mod_artifact;
 use std::env;
-use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
-use walkdir::WalkDir;
-
-#[derive(Deserialize)]
-struct Manifest {
-    #[serde(rename = "Name")]
-    name: String,
-    #[serde(rename = "Version")]
-    version: String,
-}
 
 pub fn run(args: DevArgs) -> Result<()> {
     // 1. Resolve mod directory
@@ -75,38 +65,13 @@ pub fn run(args: DevArgs) -> Result<()> {
     }
 
     // 3. Identify artifact
-    // Look for jars in build/libs/ - excluding sources/javadoc jars if possible, but for simplicity pick the first likely candidate or all of them.
-    // The requirement says "ONLY THE CORRECT ONE, NOT INCLUDED LIBRARIES".
-    // Usually build/libs contains: mod-version.jar, mod-version-sources.jar, etc.
-    // We should pick the main one. Typically the one that doesn't end in -sources.jar or -javadoc.jar.
-
-    let build_libs = mod_dir.join("build").join("libs");
-    if !build_libs.exists() {
-        bail!("Build directory not found at {}. Gradle build may have failed silently or output elsewhere.", build_libs.display());
+    let artifact = resolve_mod_artifact(&mod_dir);
+    if !artifact.source_path.exists() {
+        bail!(
+            "Could not find a suitable .jar artifact in build/libs/ (expected {}).",
+            artifact.source_path.display()
+        );
     }
-
-    let mut artifact_path: Option<PathBuf> = None;
-
-    for entry in WalkDir::new(&build_libs)
-        .max_depth(1)
-        .into_iter()
-        .filter_map(|e| e.ok())
-    {
-        let path = entry.path();
-        if path.extension().map_or(false, |ext| ext == "jar") {
-            let file_name = path.file_name().unwrap().to_string_lossy();
-            if !file_name.contains("-sources")
-                && !file_name.contains("-javadoc")
-                && !file_name.contains("-plain")
-            {
-                artifact_path = Some(path.to_path_buf());
-                break;
-            }
-        }
-    }
-
-    let artifact =
-        artifact_path.context("Could not find a suitable .jar artifact in build/libs/")?;
 
     // 4. Resolve Target and deploy
     let destination_dir = if let Some(target_str) = args.target {
@@ -138,9 +103,12 @@ pub fn run(args: DevArgs) -> Result<()> {
         }
     } else {
         // Use default server
-        let default_server_name = core_config::get_default_server()
-            .map_err(|e| anyhow::anyhow!("Failed to get default server: {}", e))?
-            .context("No target provided and no default server configured. Use 'hymod server set-default <NAME>' or provide a target argument.")?;
+        let default_server_name =
+            core_config::get_default_server_for_kind(&core_config::ServerKind::Local)
+                .map_err(|e| anyhow::anyhow!("Failed to get default local server: {}", e))?
+                .context(
+                    "No target provided and no default local server configured. Use 'hymod server default local <NAME>' or provide a target argument.",
+                )?;
 
         let server_cfg = core_config::load_server_config(&default_server_name)
             .map_err(|e| anyhow::anyhow!("Failed to load server config: {}", e))?;
@@ -155,43 +123,16 @@ pub fn run(args: DevArgs) -> Result<()> {
     };
 
     if !destination_dir.exists() {
-        bail!(
-            "Destination directory does not exist: {}",
-            destination_dir.display()
-        );
+        std::fs::create_dir_all(&destination_dir).with_context(|| {
+            format!(
+                "Failed to create destination directory: {}",
+                destination_dir.display()
+            )
+        })?;
     }
 
     // 5. Copy artifact
-    let file_name = artifact.file_name().context("Artifact has no file name")?;
-
-    // Try to read manifest.json for correct naming
-    let manifest_path = mod_dir.join("src/main/resources/manifest.json");
-    let target_name = if manifest_path.exists() {
-        if let Ok(content) = fs::read_to_string(&manifest_path) {
-            if let Ok(manifest) = serde_json::from_str::<Manifest>(&content) {
-                format!("{}-{}.jar", manifest.name, manifest.version)
-            } else {
-                println!(
-                    "{} Failed to parse manifest.json, using build artifact name",
-                    "!!".yellow()
-                );
-                file_name.to_string_lossy().into_owned()
-            }
-        } else {
-            println!(
-                "{} Failed to read manifest.json, using build artifact name",
-                "!!".yellow()
-            );
-            file_name.to_string_lossy().into_owned()
-        }
-    } else {
-        println!(
-            "{} No manifest.json found at {}, using build artifact name",
-            "!!".yellow(),
-            manifest_path.display()
-        );
-        file_name.to_string_lossy().into_owned()
-    };
+    let target_name = artifact.target_file_name;
 
     let dest_file = destination_dir.join(&target_name);
 
@@ -201,7 +142,7 @@ pub fn run(args: DevArgs) -> Result<()> {
         target_name,
         destination_dir.display()
     );
-    std::fs::copy(&artifact, &dest_file)
+    std::fs::copy(&artifact.source_path, &dest_file)
         .with_context(|| format!("Failed to copy artifact to {}", destination_dir.display()))?;
 
     println!(

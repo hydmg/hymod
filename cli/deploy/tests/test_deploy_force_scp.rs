@@ -26,11 +26,12 @@ fn test_deploy_force_scp() {
         .assert()
         .success();
 
-    // Run deploy (default transport should be SCP)
+    // Run deploy with no rsync in PATH: default should fall back to SCP.
     Command::cargo_bin("hymod")
         .expect("binary not found")
         .current_dir(&project_dir)
         .env("HOME", home_dir.path())
+        .env("PATH", "")
         .args(["deploy", "prod", "--dry-run"])
         .assert()
         .success()

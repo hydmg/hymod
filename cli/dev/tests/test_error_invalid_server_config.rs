@@ -1,5 +1,3 @@
-
-
 #[test]
 fn test_error_invalid_server_config() {
     println!(

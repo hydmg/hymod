@@ -5,6 +5,9 @@ pub struct DeployCommand {
     pub server_name: Option<String>,
     #[arg(long)]
     pub transport: Option<String>,
+    /// Restart server after upload (disabled by default)
+    #[arg(long)]
+    pub restart: bool,
     #[arg(long)]
     pub dry_run: bool,
     /// Path to the mod directory (default: current directory)
@@ -21,6 +24,7 @@ impl CliCommand for DeployCommand {
         let args = features_deploy::DeployArgs {
             server_name: self.server_name.clone(),
             transport: self.transport.clone(),
+            restart: self.restart,
             dry_run: self.dry_run,
             path: self.path.clone(),
         };

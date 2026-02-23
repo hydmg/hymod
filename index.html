@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Are We Mod Yet? - Hymod Development Progress</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #fff;
+            padding: 2rem;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .logo {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            width: 60px;
+            height: 60px;
+            opacity: 0.8;
+            transition: opacity 0.3s;
+        }
+        
+        .logo:hover {
+            opacity: 1;
+        }
+        
+        .logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .repo-link {
+            color: #a8b2d1;
+            text-decoration: none;
+            font-size: 1.1rem;
+            transition: color 0.3s;
+        }
+        
+        .repo-link:hover {
+            color: #667eea;
+        }
+        
+        .progress-section {
+            margin-bottom: 3rem;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: #8892b0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .progress-bar-container {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50px;
+            height: 40px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50px;
+            transition: width 1s ease-out;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 1.5rem;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .grid-section {
+            margin-top: 3rem;
+        }
+        
+        .grid-header {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: #ccd6f6;
+            font-weight: 600;
+        }
+        
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-bottom: 3rem;
+        }
+        
+        .test-square {
+            aspect-ratio: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            padding: 0.75rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            border: 2px solid transparent;
+            word-break: break-word;
+        }
+        
+        .test-square.passed {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border-color: #34d399;
+        }
+        
+        .test-square.failed {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .test-square:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+        
+        .test-square.passed:hover {
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+        }
+        
+        .tooltip {
+            position: absolute;
+            bottom: 110%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.95);
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 10;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .test-square:hover .tooltip {
+            opacity: 1;
+        }
+        
+        .crate-name {
+            color: #667eea;
+            font-weight: 600;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 4rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #8892b0;
+            font-size: 0.9rem;
+        }
+        
+        footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        footer a:hover {
+            text-decoration: underline;
+        }
+        /* Coverage Table Styles */
+        .coverage-container {
+            margin-top: 4rem;
+            margin-bottom: 4rem;
+        }
+        .coverage-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .coverage-table th, .coverage-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .coverage-table th {
+            font-weight: 600;
+            color: #ccd6f6;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .coverage-table tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .coverage-table tr:last-child td {
+            border-bottom: none;
+        }
+        .text-right { text-align: right !important; }
+        .coverage-high { color: #10b981; font-weight: 600; }
+        .coverage-medium { color: #f59e0b; font-weight: 600; }
+        .coverage-low { color: #ef4444; font-weight: 600; }
+        .file-cell { font-family: 'SF Mono', 'Fira Code', 'Roboto Mono', monospace; color: #a8b2d1; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+    <a href="https://hydmg.com" class="logo" target="_blank" rel="noopener">
+        <img src="logo.png" alt="HYDMG Logo">
+    </a>
+    
+    <div class="container">
+        <header>
+            <h1>Are We Mod Yet?</h1>
+            <a href="https://github.com/hydmg/hymod" class="repo-link" target="_blank" rel="noopener">hymod</a>
+        </header>
+        
+        <div class="progress-section">
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-value" id="percentage">34%</div>
+                    <div class="stat-label">Complete</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="passed">53</div>
+                    <div class="stat-label">Passing</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="total">154</div>
+                    <div class="stat-label">Total Tests</div>
+                </div>
+            </div>
+            
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar" style="width: 34%">
+                    <span>34%</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grid-section">
+            <div class="grid-header">Test Implementation Status</div>
+            <div id="testGrid" class="test-grid">
+                <!-- Tests will be inserted here -->
+            </div>
+        </div>
+
+<p>No coverage data found.</p>
+        
+        <footer>
+            Automatically generated from test results
+        </footer>
+    </div>
+    
+    <script>
+        const tests = [{"name":"config merge cli overrides repo","crate":"core-config","status":"failed"},{"name":"config merge repo overrides global","crate":"core-config","status":"failed"},{"name":"default server resolution","crate":"core-config","status":"failed"},{"name":"hymod yaml invalid semver","crate":"core-config","status":"failed"},{"name":"hymod yaml missing required field","crate":"core-config","status":"failed"},{"name":"hymod yaml parse minimal","crate":"core-config","status":"failed"},{"name":"hymod yaml parse valid","crate":"core-config","status":"failed"},{"name":"missing server error","crate":"core-config","status":"failed"},{"name":"server yaml missing ssh host","crate":"core-config","status":"failed"},{"name":"server yaml name mismatch","crate":"core-config","status":"failed"},{"name":"server yaml parse local","crate":"core-config","status":"failed"},{"name":"server yaml parse ssh","crate":"core-config","status":"failed"},{"name":"execute plan check failure","crate":"core-ops","status":"passed"},{"name":"execute plan check zip failure","crate":"core-ops","status":"passed"},{"name":"execute plan copy missing source","crate":"core-ops","status":"passed"},{"name":"execute plan symlink missing source allowed","crate":"core-ops","status":"passed"},{"name":"execute plan run process exit code failure","crate":"core-ops","status":"passed"},{"name":"execute plan run process failure","crate":"core-ops","status":"passed"},{"name":"execute plan copy file","crate":"core-ops","status":"passed"},{"name":"execute plan mkdir","crate":"core-ops","status":"passed"},{"name":"execute plan run process","crate":"core-ops","status":"passed"},{"name":"execute plan symlink","crate":"core-ops","status":"passed"},{"name":"execute plan write file","crate":"core-ops","status":"passed"},{"name":"dry run output","crate":"core-ops","status":"passed"},{"name":"artifact path custom override","crate":"core-path","status":"failed"},{"name":"artifact path from repo","crate":"core-path","status":"failed"},{"name":"local symlink path calculation","crate":"core-path","status":"failed"},{"name":"remote artifact path jar","crate":"core-path","status":"failed"},{"name":"remote artifact path zip","crate":"core-path","status":"failed"},{"name":"plan deterministic output","crate":"core-plan","status":"passed"},{"name":"plan dry run format","crate":"core-plan","status":"failed"},{"name":"build artifact contains manifest","crate":"features-build","status":"failed"},{"name":"build artifact contains mod jar","crate":"features-build","status":"failed"},{"name":"build artifact contains mod json","crate":"features-build","status":"failed"},{"name":"build artifact exists","crate":"features-build","status":"failed"},{"name":"build artifact not empty","crate":"features-build","status":"failed"},{"name":"build custom gradle tasks","crate":"features-build","status":"failed"},{"name":"build java 25 toolchain","crate":"features-build","status":"failed"},{"name":"build manifest fields valid","crate":"features-build","status":"failed"},{"name":"build missing wrapper validation","crate":"features-build","status":"failed"},{"name":"build release flag","crate":"features-build","status":"failed"},{"name":"build standard","crate":"features-build","status":"failed"},{"name":"error missing gradle wrapper","crate":"features-build","status":"failed"},{"name":"golden plan build","crate":"features-build","status":"failed"},{"name":"error invalid yaml syntax","crate":"features-new","status":"failed"},{"name":"error missing hymod yaml","crate":"features-new","status":"failed"},{"name":"golden plan new","crate":"features-new","status":"failed"},{"name":"new custom path","crate":"features-new","status":"failed"},{"name":"new defaults","crate":"features-new","status":"failed"},{"name":"new destination already exists","crate":"features-new","status":"failed"},{"name":"new gradle wrapper generated","crate":"features-new","status":"failed"},{"name":"new group package overrides","crate":"features-new","status":"passed"},{"name":"new hymod yaml template","crate":"features-new","status":"failed"},{"name":"new java entrypoint generated","crate":"features-new","status":"failed"},{"name":"new mod json sync","crate":"features-new","status":"failed"},{"name":"new no ui flag","crate":"features-new","status":"failed"},{"name":"skeleton plan generation","crate":"features-new","status":"passed"},{"name":"error server not found","crate":"features-server","status":"passed"},{"name":"server add generates file","crate":"features-server","status":"failed"},{"name":"server get path","crate":"features-server","status":"failed"},{"name":"server list empty","crate":"features-server","status":"failed"},{"name":"server list multiple","crate":"features-server","status":"failed"},{"name":"server list with servers","crate":"features-server","status":"failed"},{"name":"server test connectivity","crate":"features-server","status":"failed"},{"name":"server test local paths","crate":"features-server","status":"failed"},{"name":"server test ssh permissions","crate":"features-server","status":"failed"},{"name":"build dry run","crate":"hymod","status":"failed"},{"name":"build release dry run","crate":"hymod","status":"failed"},{"name":"error artifact dir not writable","crate":"hymod","status":"failed"},{"name":"error gradle failure","crate":"hymod","status":"failed"},{"name":"error invalid hymod yaml","crate":"hymod","status":"failed"},{"name":"error missing required fields","crate":"hymod","status":"failed"},{"name":"error not in mod directory","crate":"hymod","status":"failed"},{"name":"config set get and list","crate":"hymod","status":"passed"},{"name":"deploy dry run","crate":"hymod","status":"failed"},{"name":"deploy dry run with transport","crate":"hymod","status":"failed"},{"name":"deploy force scp","crate":"hymod","status":"passed"},{"name":"deploy full pipeline","crate":"hymod","status":"failed"},{"name":"deploy path arg","crate":"hymod","status":"failed"},{"name":"deploy remote path jar","crate":"hymod","status":"failed"},{"name":"deploy with default server","crate":"hymod","status":"failed"},{"name":"deploy with server name","crate":"hymod","status":"failed"},{"name":"transport override rsync","crate":"hymod","status":"passed"},{"name":"transport override scp","crate":"hymod","status":"passed"},{"name":"default server dev local","crate":"hymod","status":"passed"},{"name":"default server dev validates local","crate":"hymod","status":"passed"},{"name":"dev deploy to target","crate":"hymod","status":"passed"},{"name":"dev default server from config","crate":"hymod","status":"passed"},{"name":"dev full pipeline","crate":"hymod","status":"passed"},{"name":"dev manifest naming","crate":"hymod","status":"passed"},{"name":"dev no default server error","crate":"hymod","status":"passed"},{"name":"dev oneshot flow","crate":"hymod","status":"passed"},{"name":"dev override restart","crate":"hymod","status":"passed"},{"name":"dev restart command from server config","crate":"hymod","status":"passed"},{"name":"dev runs build","crate":"hymod","status":"passed"},{"name":"dev runs link","crate":"hymod","status":"passed"},{"name":"dev runs restart","crate":"hymod","status":"passed"},{"name":"dev watch mode init","crate":"hymod","status":"passed"},{"name":"dev with default server","crate":"hymod","status":"passed"},{"name":"dev with server name","crate":"hymod","status":"passed"},{"name":"error build fails","crate":"hymod","status":"passed"},{"name":"error invalid server config","crate":"hymod","status":"passed"},{"name":"error link fails","crate":"hymod","status":"passed"},{"name":"error missing restart cmd","crate":"hymod","status":"passed"},{"name":"error missing server no default","crate":"hymod","status":"passed"},{"name":"error restart fails","crate":"hymod","status":"passed"},{"name":"error server is remote","crate":"hymod","status":"passed"},{"name":"error server not found","crate":"hymod","status":"passed"},{"name":"golden plan dev","crate":"hymod","status":"failed"},{"name":"default server link local","crate":"hymod","status":"failed"},{"name":"default server link validates local","crate":"hymod","status":"failed"},{"name":"error artifact missing","crate":"hymod","status":"failed"},{"name":"error invalid server config","crate":"hymod","status":"failed"},{"name":"error missing mods dir","crate":"hymod","status":"failed"},{"name":"error missing server no default","crate":"hymod","status":"failed"},{"name":"error missing server root","crate":"hymod","status":"failed"},{"name":"error server is remote","crate":"hymod","status":"failed"},{"name":"error server not found","crate":"hymod","status":"failed"},{"name":"error server root not writable","crate":"hymod","status":"failed"},{"name":"golden plan link","crate":"hymod","status":"failed"},{"name":"link artifact missing","crate":"hymod","status":"failed"},{"name":"link creates mods dir","crate":"hymod","status":"failed"},{"name":"link creates symlink","crate":"hymod","status":"failed"},{"name":"link local server","crate":"hymod","status":"failed"},{"name":"link multiple mods same server","crate":"hymod","status":"failed"},{"name":"link overwrites existing symlink","crate":"hymod","status":"failed"},{"name":"link server not found","crate":"hymod","status":"failed"},{"name":"link ssh server rejected","crate":"hymod","status":"failed"},{"name":"link symlink points to artifact","crate":"hymod","status":"failed"},{"name":"link updates existing symlink","crate":"hymod","status":"failed"},{"name":"link with default server","crate":"hymod","status":"failed"},{"name":"link with server name","crate":"hymod","status":"failed"},{"name":"error empty name","crate":"hymod","status":"failed"},{"name":"error invalid group format","crate":"hymod","status":"failed"},{"name":"error invalid name spaces","crate":"hymod","status":"failed"},{"name":"error invalid name special chars","crate":"hymod","status":"failed"},{"name":"error invalid package format","crate":"hymod","status":"failed"},{"name":"error missing name","crate":"hymod","status":"failed"},{"name":"error parent path missing","crate":"hymod","status":"failed"},{"name":"error path is file","crate":"hymod","status":"failed"},{"name":"new all options","crate":"hymod","status":"passed"},{"name":"new kebab case name","crate":"hymod","status":"failed"},{"name":"new snake case name","crate":"hymod","status":"failed"},{"name":"new ui folder generated","crate":"hymod","status":"failed"},{"name":"new with group","crate":"hymod","status":"failed"},{"name":"new with package","crate":"hymod","status":"failed"},{"name":"server add local","crate":"hymod","status":"passed"},{"name":"server add remote","crate":"hymod","status":"passed"},{"name":"server add remote with path parses server root","crate":"hymod","status":"passed"},{"name":"server already exists","crate":"hymod","status":"passed"},{"name":"server default","crate":"hymod","status":"passed"},{"name":"server default separate local and remote","crate":"hymod","status":"passed"},{"name":"server list","crate":"hymod","status":"failed"},{"name":"server remove","crate":"hymod","status":"passed"}];
+        const grid = document.getElementById('testGrid');
+        
+        tests.forEach(test => {
+            const square = document.createElement('div');
+            square.className = `test-square ${test.status}`;
+            square.innerHTML = `
+                <span>${test.name}</span>
+                <div class="tooltip">
+                    <div class="crate-name">${test.crate}</div>
+                    <div>${test.status === 'passed' ? '✓ Passing' : '○ Not Implemented'}</div>
+                </div>
+            `;
+            grid.appendChild(square);
+        });
+    </script>
+</body>
+</html>
